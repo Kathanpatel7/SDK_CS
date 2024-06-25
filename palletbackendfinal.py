@@ -1,6 +1,7 @@
 import socket
 import struct
 import time
+import math
 
 DEFAULT_TIMEOUT = 10
 
@@ -110,7 +111,7 @@ class RobotData():
     def movel(self, position):
         if len(position) != 6:
             raise ValueError("Position must be a list of 6 elements: [x, y, z, rx, ry, rz]")
-        mes = f"def mov():\r\n    movel([{position[0]},{position[1]},{position[2]},{position[3]},{position[4]},{position[5]}],a=1,v=0.3,t=0,r=0)\r\nend\r\n"
+        mes = f"def mov():\r\n    movel([{position[0]},{position[1]},{position[2]},{position[3]},{position[4]},{position[5]}],a=1,v=0.4,t=0,r=0)\r\nend\r\n"
         self.send_data(mes.encode())
 
 
@@ -157,14 +158,20 @@ def calculate_pre_point(point):
     return [point[0], point[1], point[2] + 0.2, point[3], point[4], point[5]]
 
 
+def apply_rotation(position, angle_rad):
+    position[5] += angle_rad
+    return position
+
+
 if __name__ == "__main__":
     pickup_point, transfer_point, master_point, num_layers = getMasterPoint()
 
+    # box_coords now includes rotation angle as the third element (in radians)
     box_coords = [
-        [0.1, 0.1, 0],
-        [0.2, 0.1, 0],
-        [0.1, 0.2, 0],
-        [0.2, 0.2, 0]
+        [0.1, 0.1, math.pi / 2],  # 90 degrees
+        [0.2, 0.1, 0],  # 0 degrees
+        [0.1, 0.2, 0],  # 0 degrees
+        [0.2, 0.2, math.pi / 2]  # 90 degrees
     ]
 
     rb = RobotData()
@@ -173,7 +180,8 @@ if __name__ == "__main__":
 
         for layer in range(num_layers):
             for box in box_coords:
-                box_abs = [master_point[i] + box[i] for i in range(3)] + master_point[3:]
+                box_abs = [master_point[i] + box[i] for i in range(2)] + [master_point[2]] + master_point[3:]
+                rotation_angle = box[2]  # Get the rotation angle
                 pre_pickup = calculate_pre_point(pickup_point)
                 pre_place = calculate_pre_point(box_abs)
 
@@ -183,10 +191,14 @@ if __name__ == "__main__":
                 time.sleep(2)
                 rb.movel(pre_pickup)
                 time.sleep(2)
-                rb.movel(transfer_point)
+
+                # Apply rotation to transfer point during the move from pre-pickup
+                transfer_point_rotated = apply_rotation(transfer_point.copy(), rotation_angle)
+                rb.movel(transfer_point_rotated)
                 time.sleep(3)
+
                 rb.movel(pre_place)
-                time.sleep(2)
+                time.sleep(3.5)
                 rb.movel(box_abs)
                 time.sleep(3)
                 rb.movel(pre_place)
