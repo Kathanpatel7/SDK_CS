@@ -110,7 +110,7 @@ class RobotData():
     def movel(self, position):
         if len(position) != 6:
             raise ValueError("Position must be a list of 6 elements: [x, y, z, rx, ry, rz]")
-        mes = f"def mov():\r\n    movel([{position[0]},{position[1]},{position[2]},{position[3]},{position[4]},{position[5]}],a=1,v=0.2,t=0,r=0)\r\nend\r\n"
+        mes = f"def mov():\r\n    movel([{position[0]},{position[1]},{position[2]},{position[3]},{position[4]},{position[5]}],a=1,v=0.3,t=0,r=0)\r\nend\r\n"
         self.send_data(mes.encode())
 
 
@@ -154,7 +154,7 @@ def getMasterPoint():
 
 
 def calculate_pre_point(point):
-    return [point[0], point[1], point[2] + 0.1, point[3], point[4], point[5]]
+    return [point[0], point[1], point[2] + 0.2, point[3], point[4], point[5]]
 
 
 if __name__ == "__main__":
