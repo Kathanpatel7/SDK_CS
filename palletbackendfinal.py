@@ -168,16 +168,17 @@ if __name__ == "__main__":
 
     # box_coords now includes rotation angle as the third element (in radians)
     box_coords = [
-        [0.1, 0.1, math.pi / 2],  # 90 degrees
+        [0.1, 0.1, 0],  # 90 degrees
         [0.2, 0.1, 0],  # 0 degrees
         [0.1, 0.2, 0],  # 0 degrees
-        [0.2, 0.2, math.pi / 2]  # 90 degrees
+        [0.2, 0.2, 0]  # 90 degrees
     ]
 
     rb = RobotData()
     try:
         rb.connect('192.168.1.200')
 
+        current_angle = 0  # Initialize the current angle
         for layer in range(num_layers):
             for box in box_coords:
                 box_abs = [master_point[i] + box[i] for i in range(2)] + [master_point[2]] + master_point[3:]
@@ -193,17 +194,18 @@ if __name__ == "__main__":
                 time.sleep(2)
 
                 # Apply rotation to transfer point during the move from pre-pickup
-                transfer_point_rotated = apply_rotation(transfer_point.copy(), rotation_angle)
+                transfer_point_rotated = apply_rotation(transfer_point.copy(), rotation_angle - current_angle)
                 rb.movel(transfer_point_rotated)
+                current_angle = rotation_angle  # Update the current angle to the new angle
                 time.sleep(3)
 
                 rb.movel(pre_place)
-                time.sleep(3.5)
+                time.sleep(3)
                 rb.movel(box_abs)
                 time.sleep(3)
                 rb.movel(pre_place)
                 time.sleep(2)
-                rb.movel(transfer_point)
+                rb.movel(transfer_point_rotated)
                 time.sleep(3)
 
             # Adjust height for next layer
