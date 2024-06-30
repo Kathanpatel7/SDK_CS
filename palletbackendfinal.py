@@ -194,7 +194,7 @@ if __name__ == "__main__":
                 box_abs_rotated = apply_rotation(box_abs.copy(), rotation_angle)
 
                 rb.movel(pre_place_rotated)
-                time.sleep(3)
+                time.sleep(4)
                 rb.movel(box_abs_rotated)
                 time.sleep(3)
                 rb.movel(pre_place_rotated)
@@ -203,7 +203,7 @@ if __name__ == "__main__":
                 # Apply rotation to pre-pickup for next pickup
                 pre_pickup_rotated = apply_rotation(pre_pickup.copy(), -rotation_angle)
                 rb.movel(pre_pickup_rotated)
-                time.sleep(3)
+                time.sleep(4)
 
             # Adjust height for next layer
             pickup_point[2] += 0
