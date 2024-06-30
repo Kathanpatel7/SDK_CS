@@ -141,17 +141,13 @@ def getMasterPoint():
     result = get_tcp_pose(robot_ip)
     print(result)
 
-    input("Press enter after reaching desired transfer location")
-    transfer = get_tcp_pose(robot_ip)
-    print(transfer)
-
     input("Press enter after reaching desired pickup location")
     pickup = get_tcp_pose(robot_ip)
     print(pickup)
 
     num_layers = int(input("Enter the number of layers: "))
 
-    return pickup, transfer, result, num_layers
+    return pickup, result, num_layers
 
 
 def calculate_pre_point(point):
@@ -164,14 +160,14 @@ def apply_rotation(position, angle_rad):
 
 
 if __name__ == "__main__":
-    pickup_point, transfer_point, master_point, num_layers = getMasterPoint()
+    pickup_point, master_point, num_layers = getMasterPoint()
 
     # box_coords now includes rotation angle as the third element (in radians)
     box_coords = [
-        [0.1, 0.1, 0],  # 90 degrees
+        [0.1, 0.1, 1.57],  # 90 degrees
         [0.2, 0.1, 0],  # 0 degrees
         [0.1, 0.2, 0],  # 0 degrees
-        [0.2, 0.2, 0]  # 90 degrees
+        [0.2, 0.2, 1.57]  # 90 degrees
     ]
 
     rb = RobotData()
@@ -187,25 +183,26 @@ if __name__ == "__main__":
                 pre_place = calculate_pre_point(box_abs)
 
                 rb.movel(pre_pickup)
-                time.sleep(2)
+                time.sleep(3)
                 rb.movel(pickup_point)
                 time.sleep(2)
                 rb.movel(pre_pickup)
                 time.sleep(2)
 
-                # Apply rotation to transfer point during the move from pre-pickup
-                transfer_point_rotated = apply_rotation(transfer_point.copy(), rotation_angle - current_angle)
-                rb.movel(transfer_point_rotated)
-                current_angle = rotation_angle  # Update the current angle to the new angle
-                time.sleep(3)
+                # Apply rotation to pre-place, place, and pre-place (second time)
+                pre_place_rotated = apply_rotation(pre_place.copy(), rotation_angle)
+                box_abs_rotated = apply_rotation(box_abs.copy(), rotation_angle)
 
-                rb.movel(pre_place)
+                rb.movel(pre_place_rotated)
                 time.sleep(3)
-                rb.movel(box_abs)
+                rb.movel(box_abs_rotated)
                 time.sleep(3)
-                rb.movel(pre_place)
+                rb.movel(pre_place_rotated)
                 time.sleep(2)
-                rb.movel(transfer_point_rotated)
+
+                # Apply rotation to pre-pickup for next pickup
+                pre_pickup_rotated = apply_rotation(pre_pickup.copy(), -rotation_angle)
+                rb.movel(pre_pickup_rotated)
                 time.sleep(3)
 
             # Adjust height for next layer
@@ -218,6 +215,5 @@ if __name__ == "__main__":
         rb.disconnect()
 
     print("Pickup Point:", pickup_point)
-    print("Transfer Point:", transfer_point)
     print("Master Point:", master_point)
     print("Number of Layers:", num_layers)
